@@ -1,0 +1,142 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+## Example: To predict whether the value of number of rings either as a                      continuous value or classification problem ----
+
+## Step 1: Collecting data (Import CSV File) ----
+
+##The dataset is loaded into R.
+```{r}
+abl <- read.csv("abalonedata.csv", stringsAsFactors = FALSE)
+```
+
+## Step 2: Exploring and preparing the data ----
+
+## The dataset is explored and prepared for analysis.
+
+##The str() function is used to gather data about the dataset.One can see the names and number of variables and level of observations for each variable.
+```{r}
+str(abl)
+
+```
+
+## There is no data missing for abalone dataset after the clean-up.
+```{r}
+abl[abl==""] <- NA
+abl <- na.omit(abl)
+```
+
+## Here we assign column names for the variables.
+
+```{r}
+colnames(abl) <- c('length', 'diameter', 'height', 'wholeWwight',     'shuckedweight','visceraWeight', 'shellweight', 'rings')
+```
+
+## We use summary() function to observe characteristics of the dataset.
+```{r}
+summary(abl)
+```
+
+## We use sapply() function to observe the type of variables 
+```{r}
+sapply(abl, class)
+```
+
+## We implement the ANOVA model to find out value of coefficients with respect to shellweight and value of R-squared.As we can see, the value of adjusted R-Squared is 0.5268, which signifies that the regression data is not very much accurate.
+```{r}
+modelFit <- lm(rings ~ ., data = abl) 
+modelFit2 <- lm(rings ~ shellweight, data = abl) 
+anova(modelFit, modelFit2, test="Chisq")
+summary(modelFit)
+```
+
+## We plot a histogram to find out the frequency of particular weights of the shell. We observe that shells of weight around 0.3 are the highest in number.
+```{r}
+hist(abl$shellweight)
+```
+
+## Step 3: Training a model on the data ----
+
+
+##Standardize the data frame by each observation to get a standardized list back
+```{r}
+Rings_a <- abl[1:4000,]
+Rings_b <- as.data.frame(lapply(Rings_a, scale))
+print("Seed is set to generate random numbers in a sequence.")
+set.seed(2345)
+Rings_cluster <- kmeans(Rings_a,4)
+```
+
+## Step 4: Evaluating model performance ----
+
+## Step 4 of the data analysis process is evaluating the model's performance.
+## We just check the overall size of the cluster and then find out the centers of the clusters generated. We get 4 clusters of sizes as mentioned below in the output.
+```{r}
+# look at the size of the clusters
+Rings_cluster$size
+
+# look at the cluster centers
+Rings_cluster$centers
+```
+
+## k-means clustering is done with k=3 after standardizing data where the 1st arguement is the dataset and the 2nd arguement is the k parameter
+
+## Clusplot is used as 2D representation of cluster results even when they represent of 92.6% of total variance.
+```{r}
+scaled=scale(abl)
+k_cluster=kmeans(scaled,3)
+k_cluster
+
+
+library("cluster")
+clusplot(scaled, k_cluster$cluster, color=TRUE, shade=TRUE, 
+  	labels=2, lines=0)
+
+```
+
+## We select option 2 in MClust list of plots. The classification plot shows the linear trend between the columns. In some cases, exponential linear trend is also depicted.
+
+
+
+## Step 5: Improving model performance ----
+
+## This step involves improving the model performance to get better results.
+
+# apply the cluster IDs to the original data frame
+```{r}
+abl$cluster <- k_cluster$cluster
+abl$cluster
+```
+
+```{r}
+# look at the first three records
+abl[1:5, c("length", "diameter", "height")]
+
+# mean shellweight by cluster
+aggregate(data = abl, shellweight ~ cluster, mean)
+
+# mean number of rings by cluster
+aggregate(data = abl, rings ~ cluster, mean)
+```
+```{r}
+sqrt_file <- abl**0.5
+km <- kmeans(sqrt_file, centers=3, nstart=20)
+clusplot(sqrt_file, km$cluster)
+
+exp_file <- exp(abl)
+km <- kmeans(exp_file, centers=3, nstart=20)
+clusplot(exp_file, km$cluster)
+
+
+log_file <- log10(abl+1)
+km <- kmeans(log_file, centers=3, nstart=20)
+clusplot(log_file, km$cluster)
+
+sq_file <- abl**2
+km <- kmeans(sq_file, centers=3, nstart=20)
+clusplot(sq_file, km$cluster)
+```
