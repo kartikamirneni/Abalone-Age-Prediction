@@ -5,7 +5,7 @@ output:
   html_notebook: default
 ---
 
-## Example: To predict whether the value of number of rings either as a                      continuous value or classification problem ----
+## Example: To predict whether the value of number of rings either as a                      continuous value or classification problem --------
 
 ## Step 1: Collecting data (Import CSV File) ----
 
